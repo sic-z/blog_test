@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/blog_test/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/blog_test/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/blog_test/css/main.css?v=5.1.2" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="Java,JVM,">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/blog_test/favicon.ico?v=5.1.2">
+
+
+
+
+
+
+<meta name="description" content="JVM简介JVM(Java Virtual Machine) 是Java应用的运行引擎，JVM是Java程序中main()方法的实际调用者，JVM属于JRE(Java Runtime Environment)。 Java应用被称为WORA (Write Once Run Anywhere/编写一次，随处运行)，这意味着，Java开发者在一个系统中开发完的程序可以不经过任何调整而在其他系统能够上运行">
+<meta name="keywords" content="Java,JVM">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JVM工作过程">
+<meta property="og:url" content="https://sic-z.github.io/blog_test/2016/02/23/How_JVM_Works/index.html">
+<meta property="og:site_name" content="sic-z&#39;s blog">
+<meta property="og:description" content="JVM简介JVM(Java Virtual Machine) 是Java应用的运行引擎，JVM是Java程序中main()方法的实际调用者，JVM属于JRE(Java Runtime Environment)。 Java应用被称为WORA (Write Once Run Anywhere/编写一次，随处运行)，这意味着，Java开发者在一个系统中开发完的程序可以不经过任何调整而在其他系统能够上运行">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-01-26T14:37:45.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="JVM工作过程">
+<meta name="twitter:description" content="JVM简介JVM(Java Virtual Machine) 是Java应用的运行引擎，JVM是Java程序中main()方法的实际调用者，JVM属于JRE(Java Runtime Environment)。 Java应用被称为WORA (Write Once Run Anywhere/编写一次，随处运行)，这意味着，Java开发者在一个系统中开发完的程序可以不经过任何调整而在其他系统能够上运行">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/blog_test/',
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://sic-z.github.io/blog_test/2016/02/23/How_JVM_Works/">
+
+
+
+
+
+  <title>JVM工作过程 | sic-z's blog</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/blog_test/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">sic-z's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/blog_test/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/blog_test/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/blog_test/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://sic-z.github.io/blog_test/blog_test/2016/02/23/How_JVM_Works/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="SimonZ">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/blog_test/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="sic-z's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">JVM工作过程</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2016-02-23T19:43:22+08:00">
+                2016-02-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="JVM简介"><a href="#JVM简介" class="headerlink" title="JVM简介"></a>JVM简介</h2><p>JVM(Java Virtual Machine) 是Java应用的运行引擎，JVM是Java程序中main()方法的实际调用者，JVM属于JRE(Java Runtime Environment)。</p>
+<p>Java应用被称为WORA (Write Once Run Anywhere/编写一次，随处运行)，这意味着，Java开发者在一个系统中开发完的程序可以不经过任何调整而在其他系统能够上运行，着得益于JVM的存在。</p>
+<p>当我们编译.java文件时，编译器会生成一个同名的.class文件，运行class文件时会有许多步骤，这些步骤描述了JVM的整个工作内容。</p>
+<h2 id="class加载子系统"><a href="#class加载子系统" class="headerlink" title="class加载子系统"></a>class加载子系统</h2><p>class加载子系统主要负责三个操作：</p>
+<ul>
+<li>加载(loading)</li>
+<li>链接(linking)</li>
+<li>初始化(initialization)</li>
+</ul>
+<h3 id="加载-loading"><a href="#加载-loading" class="headerlink" title="加载(loading)"></a>加载(loading)</h3><p>类加载器(Class Loader)读取.class文件，并生成相应的二进制数据保存在方法区，对每一个.class文件，JVM都在方法区存储下列信息：</p>
+<ul>
+<li>被加载class的限定全名以及其直接父class</li>
+<li>.class文件是否与其他类、接口或枚举类关联</li>
+<li>修饰符、变量以及方法信息</li>
+</ul>
+<p>在加载完.class文件后，JVM会在堆内存里创建一个Class类型的对象来描述它，请注意这个Class类型的对象是在java.lang包里定义的，开发者可以使用这个Class对象来获取类层级信息，比如类名称、父类名称、方法与变量信息等等，我们可以通过使用Object类的getClass()方法来获取这些对象引用。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// A Java program to demonstrate working of a Class type </span></span><br><span class="line"><span class="comment">// object created by JVM to represent .class file in </span></span><br><span class="line"><span class="comment">// memory. </span></span><br><span class="line"><span class="keyword">import</span> java.lang.reflect.Field; </span><br><span class="line"><span class="keyword">import</span> java.lang.reflect.Method; </span><br><span class="line">  </span><br><span class="line"><span class="comment">// Java code to demonstrate use of Class object </span></span><br><span class="line"><span class="comment">// created by JVM </span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span></span><br><span class="line"><span class="class"></span>&#123; </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span></span><br><span class="line"><span class="function">    </span>&#123; </span><br><span class="line">        Student s1 = <span class="keyword">new</span> Student(); </span><br><span class="line">  </span><br><span class="line">        <span class="comment">// Getting hold of Class object created </span></span><br><span class="line">        <span class="comment">// by JVM. </span></span><br><span class="line">        Class c1 = s1.getClass(); </span><br><span class="line">  </span><br><span class="line">        <span class="comment">// Printing type of object using c1. </span></span><br><span class="line">        System.out.println(c1.getName()); </span><br><span class="line">  </span><br><span class="line">        <span class="comment">// getting all methods in an array </span></span><br><span class="line">        Method m[] = c1.getDeclaredMethods(); </span><br><span class="line">        <span class="keyword">for</span> (Method method : m) </span><br><span class="line">            System.out.println(method.getName()); </span><br><span class="line">  </span><br><span class="line">        <span class="comment">// getting all fields in an array </span></span><br><span class="line">        Field f[] = c1.getDeclaredFields(); </span><br><span class="line">        <span class="keyword">for</span> (Field field : f) </span><br><span class="line">            System.out.println(field.getName()); </span><br><span class="line">    &#125; </span><br><span class="line">&#125; </span><br><span class="line">  </span><br><span class="line"><span class="comment">// A sample class whose information is fetched above using </span></span><br><span class="line"><span class="comment">// its Class object. </span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Student</span> </span></span><br><span class="line"><span class="class"></span>&#123; </span><br><span class="line">    <span class="keyword">private</span> String name; </span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> roll_No; </span><br><span class="line">  </span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getName</span><span class="params">()</span>  </span>&#123;  <span class="keyword">return</span> name;   &#125; </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setName</span><span class="params">(String name)</span> </span>&#123; <span class="keyword">this</span>.name = name; &#125; </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getRoll_no</span><span class="params">()</span>  </span>&#123; <span class="keyword">return</span> roll_No;  &#125; </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setRoll_no</span><span class="params">(<span class="keyword">int</span> roll_no)</span> </span>&#123; </span><br><span class="line">        <span class="keyword">this</span>.roll_No = roll_no; </span><br><span class="line">    &#125; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>输出：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Student</span><br><span class="line">getName</span><br><span class="line">setName</span><br><span class="line">getRoll_no</span><br><span class="line">setRoll_no</span><br><span class="line">name</span><br><span class="line">roll_No</span><br></pre></td></tr></table></figure>
+<p><strong>注意 :</strong> 对于每个加载的.class文件，只有一个Class对象被创建。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Student s2 = <span class="keyword">new</span> Student();</span><br><span class="line"><span class="comment">// c2 will point to same object where </span></span><br><span class="line"><span class="comment">// c1 is pointing</span></span><br><span class="line">Class c2 = s2.getClass();</span><br><span class="line">System.out.println(c1==c2); <span class="comment">// true</span></span><br></pre></td></tr></table></figure>
+<h3 id="链接-Linking"><a href="#链接-Linking" class="headerlink" title="链接(Linking)"></a>链接(Linking)</h3><p>执行验证、准备和解析(可选的)几个步骤：</p>
+<ul>
+<li>验证：确保Java类的二进制表示在结构上是完全正确的并且是由合格的编译器产生，如果验证过程出现错误的话，会抛出<em>java.lang.VerifyError</em>错误。</li>
+<li>准备：准备过程则是创建Java类中的静态域，并将这些域的值设为默认值。准备过程并不会执行代码。在一个Java类中会包含对其它类或接口的形式引用，包括它的父类、所实现的接口、方法的形式参数和返回值的Java类等。</li>
+<li>解析：解析的过程就是确保这些被引用的类能被正确的找到，将符号应用替换为直接引用，解析是通过在方法区搜索并定位引用实体来完成。解析的过程可能会导致其它的 Java类被加载，不同的 JVM 实现可能选择不同的解析策略。</li>
+</ul>
+<h3 id="初始化-Initialization"><a href="#初始化-Initialization" class="headerlink" title="初始化(Initialization)"></a>初始化(Initialization)</h3><p>在初始化过程中，所有的静态变量都被赋值，这个过程按照源代码中顺序自上而下，从父类到子类依次进行，主要有三种类加载器：</p>
+<ul>
+<li><em>Bootstrap 类加载器</em> ：所有JVM实现必须有一个bootstrap类加载器能够用于加载可信任的类，它用于加载 <em>JAVA_HOME/jre/lib</em> 目录中的Java核心类，这个路径就是有名的 bootstrap path。 bootstrap加载器是由 C++实现。</li>
+<li><em>Extension类加载器</em> : bootstrap加载器的子类. 由sun.misc.Launcher$ExtClassLoader类实现，加载位于扩展目录 <em>JAVA_HOME/jre/lib/ext</em>(Extension path) 以及其他在 java.ext.dirs 系统配置里定义的目录中的类库。</li>
+<li><em>系统/应用 类加载器</em> : 是extension类加载器的子类. 由sun.misc.Louncher$AppClassLoader实现，负责加载用户类路径中类库中的类，在内部使用环境变量并映射到 java.class.path，如果没有使用自定义的加载器，这个就是默认的 加载器。</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Java code to demonstrate Class Loader subsystem </span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span></span><br><span class="line"><span class="class"></span>&#123; </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span></span><br><span class="line"><span class="function">    </span>&#123; </span><br><span class="line">        <span class="comment">// String class is loaded by bootstrap loader, and </span></span><br><span class="line">        <span class="comment">// bootstrap loader is not Java object, hence null </span></span><br><span class="line">        System.out.println(String.class.getClassLoader()); </span><br><span class="line">  </span><br><span class="line">        <span class="comment">// Test class is loaded by Application loader </span></span><br><span class="line">        System.out.println(Test.class.getClassLoader()); </span><br><span class="line">    &#125; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>输出：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">null</span></span><br><span class="line">sun.misc.Launcher$AppClassLoader@<span class="number">73</span>d16e93</span><br></pre></td></tr></table></figure>
+<p><strong>注意：</strong> JVM遵循委派层级原则去加载类，系统类加载器委派加载请求给扩展类加载器，扩展类加载器再委派给bootstrap类加载器，如果类在bootstrap路径中找到，就被加载，否则加载请求会依次转给扩展类加载器和系统类加载器，最后，如果系统加载器加载类失败，会抛出运行时异常<em>java.lang.ClassNotFoundException</em>。</p>
+<h2 id="JVM内存"><a href="#JVM内存" class="headerlink" title="JVM内存"></a>JVM内存</h2><p><strong>方法区 ：</strong> 在方法区中存储了所有类层级的信息比如类名称、直接父类名称、方法和变量信息包括静态变量等等，在JVM中只有一个方法区，这是一个共享的资源。</p>
+<p><strong>堆内存： </strong>所有对象的信息都保存在堆内存中，堆内存区在JVM中也只有一个，并且是共享的。</p>
+<p><strong>栈内存区 :</strong>  对每一个线程，JVM都会创建一个运行时栈保存在栈内存区，是在线程创建时创建，它的<strong>生命期是跟随线程的生命期</strong>，每个方法执行的同时创建帧栈（Strack Frame）用于存储局部变量表（包含了对应的方法参数和局部变量），操作栈（Operand Stack，记录出栈、入栈的操作），动态链接、方法出口等信息，每个方法被调用直到执行完毕的过程，对应这帧栈在虚拟机栈的入栈和出栈的过程。线程结束栈内存也就释放，对于栈来说不存在垃圾回收问题，只要线程一结束，该栈就 Over，所以不存在垃圾回收。</p>
+<p><strong>程序计数器 :</strong> 程序计数器是一块较小的内存区域，作用可以看做是当前线程执行的字节码的位置指示器。分支、循环、跳转、异常处理和线程恢复等基础功能都需要依赖这个计算器来完成，显然每个线程都需要独立的程序计数器。 </p>
+<p><strong>本地方法栈 ：</strong>对每个线程，都创建了隔离的本地栈，用于保存native方法的信息。</p>
+<h2 id="执行引擎"><a href="#执行引擎" class="headerlink" title="执行引擎"></a>执行引擎</h2><p>执行引擎一行行地读取.class二进制文件并根据上述提到的内存区中的信息和执行引导来执行，可以分为三部分：</p>
+<ul>
+<li><em>解释器</em> : 逐行读取class文件并解释，当一个当法要被多次调用时，每次都需要解释器。</li>
+<li><em>即时编译器(Just-In-Time Compiler/JIT)</em> : 能提高解释器的效率，即时编译器把代码编译为本地平台相关的机器码，所以当解释器碰到多次的方法调用，JIT能提供直接的本地机器码，无需再进行解释，提升效率。</li>
+<li><em>垃圾收集器</em> : 用于销毁不再使用的对象。更多关于垃圾收集器的资料参考 <a href="https://www.geeksforgeeks.org/garbage-collection-java/" target="_blank" rel="noopener">Garbage Collector</a>.</li>
+</ul>
+<p><strong>Java本地接口 (JNI) :</strong> </p>
+<p>用Java去调用其他语言编写的程序，比如C或C++，JNI使得JVM可以调用硬件相关的C/C++的类库，Java的跨平台是通过JVM实现的，而JVM本身不是跨平台的，JNI也不是跨平台的，是与特定平台相关的。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><p>本文主要翻译自 <a href="https://www.geeksforgeeks.org/jvm-works-jvm-architecture/" target="_blank" rel="noopener">https://www.geeksforgeeks.org/jvm-works-jvm-architecture/</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/blog_test/tags/Java/" rel="tag"># Java</a>
+          
+            <a href="/blog_test/tags/JVM/" rel="tag"># JVM</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/blog_test/2016/01/10/TestNG_compare_with_Junit/" rel="next" title="TestNG与JUnit对比">
+                <i class="fa fa-chevron-left"></i> TestNG与JUnit对比
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="/blog_test/images/avatar.gif" alt="SimonZ">
+          <p class="site-author-name" itemprop="name">SimonZ</p>
+           
+              <p class="site-description motion-element" itemprop="description">Focus on DevOps, SRE, Python</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/blog_test/archives/">
+                <span class="site-state-item-count">2</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/blog_test/tags/index.html">
+                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#JVM简介"><span class="nav-number">1.</span> <span class="nav-text">JVM简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#class加载子系统"><span class="nav-number">2.</span> <span class="nav-text">class加载子系统</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#加载-loading"><span class="nav-number">2.1.</span> <span class="nav-text">加载(loading)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#链接-Linking"><span class="nav-number">2.2.</span> <span class="nav-text">链接(Linking)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#初始化-Initialization"><span class="nav-number">2.3.</span> <span class="nav-text">初始化(Initialization)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#JVM内存"><span class="nav-number">3.</span> <span class="nav-text">JVM内存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#执行引擎"><span class="nav-number">4.</span> <span class="nav-text">执行引擎</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">5.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy;  2016 - 
+  <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">SimonZ</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/blog_test/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/blog_test/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/blog_test/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/blog_test/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/blog_test/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/blog_test/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/blog_test/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/blog_test/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/blog_test/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/blog_test/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/blog_test/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
